@@ -33,18 +33,25 @@ def _resource_path(*parts: str) -> Path:
 
 
 class BleAssistantApp(tk.Tk):
-    BG = "#f4f7fb"
-    TEXT_BG = "#f8fafc"
-    ACCENT = "#2563eb"
-    TEXT = "#1f2937"
+    BG = "#eef3f8"
+    SURFACE = "#ffffff"
+    SURFACE_ALT = "#f7fafc"
+    TEXT_BG = "#fbfdff"
+    HEADER_BG = "#0b1220"
+    HEADER_SUB = "#b7c4d7"
+    ACCENT = "#0891b2"
+    ACCENT_DARK = "#0e7490"
+    ACCENT_SOFT = "#dff7fb"
+    TEXT = "#162033"
     MUTED = "#64748b"
-    BORDER = "#dbe3ee"
+    BORDER = "#d5e0ea"
+    DANGER = "#dc2626"
 
     def __init__(self) -> None:
         super().__init__()
         self.title("嵌入式调试助手")
-        self.geometry("1180x800")
-        self.minsize(1040, 700)
+        self.geometry("1280x860")
+        self.minsize(1120, 740)
         self.configure(background=self.BG)
         self._set_app_icon()
 
@@ -96,52 +103,103 @@ class BleAssistantApp(tk.Tk):
 
         style.configure(".", background=self.BG, foreground=self.TEXT)
         style.configure("TFrame", background=self.BG)
-        style.configure("Header.TFrame", background="#0f172a")
+        style.configure("Panel.TFrame", background=self.SURFACE)
+        style.configure("Header.TFrame", background=self.HEADER_BG)
+        style.configure("HeaderIcon.TLabel", background=self.HEADER_BG)
+        style.configure(
+            "HeaderBadge.TLabel",
+            background="#122033",
+            foreground="#a7f3d0",
+            font=("Microsoft YaHei UI", 9, "bold"),
+            padding=(10, 4),
+        )
         style.configure(
             "HeaderTitle.TLabel",
-            background="#0f172a",
+            background=self.HEADER_BG,
             foreground="#ffffff",
-            font=("Microsoft YaHei UI", 15, "bold"),
+            font=("Microsoft YaHei UI", 17, "bold"),
         )
         style.configure(
             "HeaderSub.TLabel",
-            background="#0f172a",
-            foreground="#cbd5e1",
+            background=self.HEADER_BG,
+            foreground=self.HEADER_SUB,
             font=("Microsoft YaHei UI", 9),
         )
         style.configure("TLabel", background=self.BG, foreground=self.TEXT)
         style.configure("Status.TLabel", background=self.BG, foreground=self.MUTED)
-        style.configure("TLabelframe", background=self.BG, bordercolor=self.BORDER)
+        style.configure(
+            "TLabelframe",
+            background=self.SURFACE,
+            bordercolor=self.BORDER,
+            relief="solid",
+            borderwidth=1,
+        )
         style.configure(
             "TLabelframe.Label",
-            background=self.BG,
+            background=self.SURFACE,
             foreground=self.TEXT,
             font=("Microsoft YaHei UI", 9, "bold"),
         )
-        style.configure("TNotebook", background=self.BG, borderwidth=0)
+        style.configure("TNotebook", background=self.BG, borderwidth=0, tabmargins=(0, 0, 0, 0))
         style.configure(
             "TNotebook.Tab",
-            padding=(18, 9),
-            background="#e8eef7",
+            padding=(20, 10),
+            background="#dfe8f2",
             foreground="#334155",
             font=("Microsoft YaHei UI", 9, "bold"),
         )
         style.map(
             "TNotebook.Tab",
-            background=[("selected", "#ffffff"), ("active", "#eef4ff")],
+            background=[("selected", self.SURFACE), ("active", self.ACCENT_SOFT)],
             foreground=[("selected", self.ACCENT)],
         )
-        style.configure("TButton", padding=(12, 6))
+        style.configure("TButton", padding=(12, 7), font=("Microsoft YaHei UI", 9))
         style.configure("Accent.TButton", background=self.ACCENT, foreground="#ffffff")
         style.map(
             "Accent.TButton",
-            background=[("active", "#1d4ed8"), ("disabled", "#93c5fd")],
+            background=[("active", self.ACCENT_DARK), ("disabled", "#9bd6e4")],
             foreground=[("disabled", "#eff6ff")],
         )
-        style.configure("Danger.TButton", foreground="#b91c1c")
-        style.configure("TEntry", fieldbackground="#ffffff", bordercolor=self.BORDER, padding=4)
-        style.configure("TCombobox", fieldbackground="#ffffff", bordercolor=self.BORDER, padding=3)
+        style.configure("Danger.TButton", foreground=self.DANGER)
+        style.configure(
+            "TEntry",
+            fieldbackground="#ffffff",
+            bordercolor=self.BORDER,
+            lightcolor=self.BORDER,
+            darkcolor=self.BORDER,
+            padding=5,
+        )
+        style.configure(
+            "TCombobox",
+            fieldbackground="#ffffff",
+            bordercolor=self.BORDER,
+            lightcolor=self.BORDER,
+            darkcolor=self.BORDER,
+            padding=4,
+        )
         style.configure("TCheckbutton", background=self.BG, foreground=self.TEXT)
+        style.configure(
+            "Treeview",
+            background=self.TEXT_BG,
+            fieldbackground=self.TEXT_BG,
+            foreground=self.TEXT,
+            rowheight=26,
+            bordercolor=self.BORDER,
+            borderwidth=0,
+            font=("Microsoft YaHei UI", 9),
+        )
+        style.configure(
+            "Treeview.Heading",
+            background="#e6eef6",
+            foreground="#334155",
+            padding=(6, 5),
+            font=("Microsoft YaHei UI", 9, "bold"),
+        )
+        style.map(
+            "Treeview",
+            background=[("selected", self.ACCENT)],
+            foreground=[("selected", "#ffffff")],
+        )
 
     def _build(self) -> None:
         self.columnconfigure(0, weight=1)
@@ -149,18 +207,26 @@ class BleAssistantApp(tk.Tk):
 
         header = ttk.Frame(self, style="Header.TFrame")
         header.grid(row=0, column=0, sticky="ew")
-        header.columnconfigure(0, weight=1)
+        header.columnconfigure(1, weight=1)
+        if hasattr(self, "_icon_photo"):
+            self._header_logo = self._icon_photo.subsample(5, 5)
+            ttk.Label(header, image=self._header_logo, style="HeaderIcon.TLabel").grid(
+                row=0, column=0, rowspan=2, sticky="w", padx=(20, 14), pady=14
+            )
         ttk.Label(header, text="嵌入式调试助手", style="HeaderTitle.TLabel").grid(
-            row=0, column=0, sticky="w", padx=18, pady=(14, 2)
+            row=0, column=1, sticky="w", padx=(0, 18), pady=(16, 2)
         )
         ttk.Label(
             header,
             text="BLE 主设备、BLE GATT 从设备、串口、WiFi HOSTAP/STATION 一体化调试",
             style="HeaderSub.TLabel",
-        ).grid(row=1, column=0, sticky="w", padx=18, pady=(0, 14))
+        ).grid(row=1, column=1, sticky="w", padx=(0, 18), pady=(0, 16))
+        ttk.Label(header, text="BLE / Serial / WiFi", style="HeaderBadge.TLabel").grid(
+            row=0, column=2, rowspan=2, sticky="e", padx=(0, 20), pady=18
+        )
 
         notebook = ttk.Notebook(self)
-        notebook.grid(row=1, column=0, sticky="nsew", padx=14, pady=14)
+        notebook.grid(row=1, column=0, sticky="nsew", padx=18, pady=18)
 
         self.ble_tab = ttk.Frame(notebook)
         self.peripheral_tab = ttk.Frame(notebook)
@@ -481,6 +547,8 @@ class BleAssistantApp(tk.Tk):
                 anchor="w" if column in {"command", "comment"} else "center",
             )
         self.serial_command_tree.grid(row=0, column=0, sticky="nsew", padx=8, pady=8)
+        self.serial_command_tree.tag_configure("odd", background="#ffffff")
+        self.serial_command_tree.tag_configure("even", background=self.SURFACE_ALT)
         self.serial_command_tree.bind("<<TreeviewSelect>>", self._serial_command_selected)
         self.serial_command_tree.bind("<Double-Button-1>", lambda _event: self._serial_send_selected_command())
         self.serial_command_tree.bind("<space>", lambda _event: self._serial_toggle_selected_command())
@@ -678,11 +746,14 @@ class BleAssistantApp(tk.Tk):
             widget.configure(
                 background=self.TEXT_BG,
                 foreground=self.TEXT,
-                insertbackground=self.ACCENT,
-                borderwidth=0,
-                relief="flat",
-                padx=10,
-                pady=8,
+                insertbackground=self.ACCENT_DARK,
+                borderwidth=1,
+                relief="solid",
+                highlightthickness=1,
+                highlightbackground=self.BORDER,
+                highlightcolor=self.ACCENT,
+                padx=12,
+                pady=10,
                 font=("Consolas", 10),
             )
 
@@ -1176,6 +1247,7 @@ class BleAssistantApp(tk.Tk):
                     str(command.get("comment", "")),
                     int(command.get("delay_ms", 1000)),
                 ),
+                tags=("even" if index % 2 == 0 else "odd",),
             )
         if select_index is not None and self.serial_commands:
             select_index = max(0, min(select_index, len(self.serial_commands) - 1))
